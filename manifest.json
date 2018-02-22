@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "YOUÄFDSCH ONEIN",
+  "version": "0.1",
+
+  "description": "An artistic intervention to free us from the interface oppresion",
+
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://ufgonline.ufg.ac.at/ufg_online/webnav.ini"],
+      "js": ["src/youafdsch.js"]
+    }
+  ]
+}
