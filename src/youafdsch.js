@@ -5,19 +5,39 @@
 
 console.log("loading extension");
 
-window.addEventListener('hashchange', function change (event) {
-	console.log("url changed");
-	console.log(event);
-});
-
 let iframe = document.getElementById('mainfs').children[1];
 const domparser = new DOMParser();
+const storage = localStorage;
+
+Array.prototype.pluck = function() {
+	console.log(this);
+	return this;
+};
+
+Array.prototype.uniq = function() {
+	try {
+	if (this.length === 1 || this.length === 0) return this;
+	return this.reduce((acc, [text, item]) => {
+		if(acc.length == 0) {
+			acc.push([text, item]);
+			return acc;
+		}
+		if(acc[acc.length - 1][0] != text) {
+			acc.push([text, item]);
+			return acc;
+		}
+		return acc;
+
+	}, []);
+	}
+	catch (e) {
+		console.error(e);
+	}
+};
 
 iframe.addEventListener('load', function change (event) {
 	try {
 		'use strict';
-
-		// a.querySelectorAll('table.list tr')
 
 		const innerDoc = iframe.contentDocument || iframe.contentWindow.document;
 		const items = Array.from(innerDoc.querySelectorAll('table.list tr'));
@@ -47,32 +67,60 @@ iframe.addEventListener('load', function change (event) {
 		console.log(sortedItems);
 
 		const promises = sortedItems.map((outer) => {
-			console.log(outer);
 			const [items, node] = outer;
-			console.log(items);
 			const _items = items.map(([href, id]) => {
+				// try to get result from storage
+				// 
+				const result = storage.getItem(id);
+				if(result !== null) {
+					return new Promise((resolve) => {
+						resolve([parseInt(result), id]);
+					});
+				}
 				return content.fetch(href)
 						.then((response) => {
 							return new Promise((resolve) => {
 								response.text()
 								.then((text) => {
+									// parse here
+									console.log('id', id);
+									const html = domparser.parseFromString(text, "text/html");
+									const result = Array.from(html.querySelectorAll('table.cotable .coRow.hi'))
+										.map((table_item) => {
+											return [table_item.firstElementChild.textContent,  table_item.children[5].textContent];
+										})
+										.filter(([text, _points]) => {
+											return text.indexOf('Interface Cultures') != -1
+										})
+										.uniq()
+										.reduce((sum, [_text, points]) => {
+											return sum + parseInt(points);
+										}, 0);
+
+										// sum is still 0
+										// lets see if it is a freifach
+									storage.setItem(id, result);
+										
+									// resolve to ects points result
 									resolve([
-										domparser.parseFromString(text, "text/html"),
+										result,
 										id
 									]);
-								})
-							})
-						})
+								});
+							});
+						});
 			});
-
 			return [_items, node];
 		});
 
+		console.log("stuff");
+
 		console.log(promises[0][0]);
 
-
-		Promise.all(promises[0][0]).then(result => {
-			console.log(result);
+		promises.forEach(([promises, node]) => {
+			Promise.all(promises).then(result => {
+				node.textContent = result.reduce((sum, [points, _id]) => sum + points, 0)
+			})
 		});
 	}
 	catch (e) {
