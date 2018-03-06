@@ -3,10 +3,10 @@
   "name": "YOUÄFDSCH ONEIN",
   "version": "0.1",
 
-  "description": "An artistic intervention to free us from the interface oppresion",
+  "description": "An artistic intervention to free us from the interface oppression",
 
   "icons": {
-    "48": "icons/border-48.png"
+    "48": "icons/logo_48.png"
   },
 
   "content_scripts": [

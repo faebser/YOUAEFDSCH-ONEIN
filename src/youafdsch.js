@@ -8,6 +8,12 @@ console.log("loading extension");
 let iframe = document.getElementById('mainfs').children[1];
 const domparser = new DOMParser();
 const storage = localStorage;
+const debug = true;
+const _log = console.log;
+
+console.log = function(input) {
+	if(debug) _log(input);
+}
 
 Array.prototype.pluck = function() {
 	console.log(this);
@@ -45,6 +51,16 @@ iframe.addEventListener('load', function change (event) {
 		if(items.length == 0) return;
 
 		console.log('found a match');
+
+		// removing the huren on click
+
+		Array.from(innerDoc.querySelectorAll('table.list tr a[href*="wbLv.wbShowLVDetail"]'))
+			.forEach((element) => {
+				console.log(element.getAttribute('onclick'));
+				element.removeAttribute('onclick');
+				element.addEventListener('onclick', () => true);
+				//element.setAttribute('target', '_blank');
+			});
 
 		// [[[url, id]...], node], ...]
 		const sortedItems = items.reduce((acc, item) => {
