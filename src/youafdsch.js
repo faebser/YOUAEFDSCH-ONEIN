@@ -8,7 +8,7 @@ console.log("loading extension");
 let iframe = document.getElementById('mainfs').children[1];
 const domparser = new DOMParser();
 const storage = localStorage;
-const debug = true;
+const debug = false;
 const _log = console.log;
 
 console.log = function(input) {
@@ -58,7 +58,15 @@ iframe.addEventListener('load', function change (event) {
 			.forEach((element) => {
 				console.log(element.getAttribute('onclick'));
 				element.removeAttribute('onclick');
+				//element.removeAttribute('target');
+				element.target = '_blank';
+				element.classList.add('link-check');
 				element.addEventListener('onclick', () => true);
+				const clone = element.cloneNode();
+				while (element.firstChild) {
+  					clone.appendChild(element.lastChild);
+				}
+				element.parentNode.replaceChild(clone, element);
 				//element.setAttribute('target', '_blank');
 			});
 
@@ -66,7 +74,7 @@ iframe.addEventListener('load', function change (event) {
 		const sortedItems = items.reduce((acc, item) => {
 			if(item.classList.contains('z0') || item.classList.contains('z1')) {
 				const link = Array.from(item.getElementsByTagName('a'))
-									.filter((a) => a.target === 'lvdetail')
+									.filter((a) => a.classList.contains('link-check'))
 									.shift();
 				acc[acc.length - 1][0].push([link.href, link.href.split("=")[1]]);
 				return acc;
@@ -86,14 +94,13 @@ iframe.addEventListener('load', function change (event) {
 			const [items, node] = outer;
 			const _items = items.map(([href, id]) => {
 				// try to get result from storage
-				// 
 				const result = storage.getItem(id);
 				if(result !== null) {
 					return new Promise((resolve) => {
 						resolve([parseInt(result), id]);
 					});
 				}
-				return content.fetch(href)
+				return fetch(href)
 						.then((response) => {
 							return new Promise((resolve) => {
 								response.text()
