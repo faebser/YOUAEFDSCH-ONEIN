@@ -1,3 +1,6 @@
 node_modules
 package-lock.json
 ufg-onein.sublime*web-ext-artifacts/
+bin/
+web-ext-artifacts/
+ufg-onein.sublime-*
