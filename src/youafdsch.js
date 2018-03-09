@@ -3,38 +3,44 @@
 
 'use strict';
 
-console.log("loading extension");
-
 let iframe = document.getElementById('mainfs').children[1];
 const domparser = new DOMParser();
 const storage = localStorage;
-const debug = false;
+const DEBUG = false;
 const _log = console.log;
 
-console.log = function(input) {
-	if(debug) _log(input);
+console.log = function(...input) {
+	if(DEBUG) _log(...input);
 }
 
-Array.prototype.pluck = function() {
-	console.log(this);
+console.log("loading extension");
+
+if (DEBUG) {
+	Array.prototype.pluck = function () {
+		console.log(this);
+		return this;
+	};
+}
+
+Array.prototype.pluck = function () {
 	return this;
 };
 
 Array.prototype.uniq = function() {
 	try {
-	if (this.length === 1 || this.length === 0) return this;
-	return this.reduce((acc, [text, item]) => {
-		if(acc.length == 0) {
-			acc.push([text, item]);
+		if (this.length === 1 || this.length === 0) return this;
+		return this.reduce((acc, [text, item]) => {
+			if(acc.length == 0) {
+				acc.push([text, item]);
+				return acc;
+			}
+			if(acc[acc.length - 1][0] != text) {
+				acc.push([text, item]);
+				return acc;
+			}
 			return acc;
-		}
-		if(acc[acc.length - 1][0] != text) {
-			acc.push([text, item]);
-			return acc;
-		}
-		return acc;
 
-	}, []);
+		}, []);
 	}
 	catch (e) {
 		console.error(e);
@@ -108,7 +114,7 @@ iframe.addEventListener('load', function change (event) {
 									// parse here
 									console.log('id', id);
 									const html = domparser.parseFromString(text, "text/html");
-									const result = Array.from(html.querySelectorAll('table.cotable .coRow.hi'))
+									let result = Array.from(html.querySelectorAll('table.cotable .coRow.hi'))
 										.map((table_item) => {
 											return [table_item.firstElementChild.textContent,  table_item.children[5].textContent];
 										})
@@ -120,8 +126,23 @@ iframe.addEventListener('load', function change (event) {
 											return sum + parseInt(points);
 										}, 0);
 
-										// sum is still 0
-										// lets see if it is a freifach
+									// sum is still 0
+									// lets see if it is a freifach
+
+									if (result === 0) {
+										try {
+											console.log("trying freifach");
+											result = Array.from(html.querySelectorAll('td.MaskRenderer'))
+													.filter(el => el.textContent.indexOf('Freie Wahllehrveranstaltung') != -1 && el.textContent.indexOf('Freie Wahllehrveranstaltung') == 0)
+													.map(el => el.querySelector('span.bold').textContent)
+													.reduce((sum, number) => sum + parseInt(number), 0);
+											console.log("freifach got", result);
+										}
+										catch (_) {
+											result = 0;
+										}
+									}
+
 									storage.setItem(id, result);
 										
 									// resolve to ects points result
