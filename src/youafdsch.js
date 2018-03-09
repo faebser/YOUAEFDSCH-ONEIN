@@ -157,8 +157,6 @@ iframe.addEventListener('load', function change (event) {
 			return [_items, node];
 		});
 
-		console.log("stuff");
-
 		console.log(promises[0][0]);
 
 		promises.forEach(([promises, node]) => {
